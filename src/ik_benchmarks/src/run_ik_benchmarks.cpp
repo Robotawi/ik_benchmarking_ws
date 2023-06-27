@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
   kinematic_state->setToDefaultValues();
 
   const moveit::core::JointModelGroup *joint_model_group =
-      robot_model->getJointModelGroup("panda_arm");
+      robot_model->getJointModelGroup("iiwa_arm");
 
   // Get joint names and bounds
   const std::vector<std::string> &joint_names =
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
 
     // TODO: Use the loaded tip here
     const Eigen::Isometry3d &end_effector_pose =
-        kinematic_state->getGlobalLinkTransform("panda_link8");
+        kinematic_state->getGlobalLinkTransform("tool0");
 
     // Solve Inverse kinematics
     const auto start_time = std::chrono::high_resolution_clock::now();
