@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: val_description
+    relative_path: robots/valkyrie_sim.urdf
+  srdf:
+    relative_path: config/valkyrie.srdf
+  package_settings:
+    author_name: Mohamed Raessa
+    author_email: mohamed.s.raessa@gmail.com
+    generated_timestamp: 1687857888
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity

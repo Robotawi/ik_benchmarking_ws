@@ -1,0 +1,13 @@
+# Default initial positions for valkyrie's ros2_control fake system
+
+initial_positions:
+  rightElbowPitch: 0
+  rightForearmYaw: 0
+  rightShoulderPitch: 0
+  rightShoulderRoll: 0
+  rightShoulderYaw: 0
+  rightWristPitch: 0
+  rightWristRoll: 0
+  torsoPitch: 0
+  torsoRoll: 0
+  torsoYaw: 0
