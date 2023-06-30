@@ -77,7 +77,6 @@ int main(int argc, char *argv[])
   if (!link_names.empty())
   {
     tip_link_name = link_names.back();
-    rclcpp::shutdown();
   }
   else
   {
