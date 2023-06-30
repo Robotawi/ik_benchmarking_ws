@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
   const Eigen::Isometry3d &tip_link_pose = robot_state->getGlobalLinkTransform(tip_link_name);
 
   // Collect IK solving data
-  const int sample_size{1000};
+  const int sample_size{10000};
   double success_count{0.0};
   std::vector<int> solve_times; // milliseconds
 
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
                                                     bound.max_position);
       joint_values.push_back(distribution(generator));
     }
-    fmt::print("Random joint values are:\n{}\n", joint_values);
+    // fmt::print("Random joint values are:\n{}\n", joint_values);
 
     // Solve Forward Kinematics
     robot_state->setJointGroupPositions(joint_model_group, joint_values);
