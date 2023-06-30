@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
 
   std::vector<JointBounds> joint_bounds(joint_model_group->getVariableCount());
 
+  // TODO(Mohamed): use only active joints/variables because getVariableCount returns all joint types
   for (size_t i = 0; i < joint_model_group->getVariableCount(); ++i) {
     auto const &name = joint_names.at(i);
     auto const &bounds = robot_model->getVariableBounds(name);
@@ -63,10 +64,28 @@ int main(int argc, char *argv[]) {
       joint_bounds.at(i).max_position = bounds.max_position_;
     } else {
       fmt::print("Joints are unbounded!\n");
-      // TODO: Handle this case. Should we assume a range?
+      // TODO (Mohamed): Handle this case. Should we assume a range?
       return -1;
     }
   }
+
+  // Load the tip link name (not the end effector)
+  std::string tip_link_name{};
+  auto const &link_names = joint_model_group->getLinkModelNames();
+
+  if (!link_names.empty())
+  {
+    tip_link_name = link_names.back();
+    rclcpp::shutdown();
+  }
+  else
+  {
+    RCLCPP_ERROR(logger, "ERROR: The move group is corrupted. Links count is zero.\n");
+    rclcpp::shutdown();
+  }
+
+  const Eigen::Isometry3d &tip_link_pose =
+      robot_state->getGlobalLinkTransform(tip_link_name);
 
   // Collect IK solving data
   const int sample_size{1000};
@@ -91,15 +110,11 @@ int main(int argc, char *argv[]) {
     robot_state->setJointGroupPositions(joint_model_group, joint_values);
     robot_state->updateLinkTransforms();
 
-    // TODO: Use the loaded tip here
-    const Eigen::Isometry3d &end_effector_pose =
-        robot_state->getGlobalLinkTransform("tool0");
-
     // Solve Inverse kinematics
     const auto start_time = std::chrono::high_resolution_clock::now();
 
     bool found_ik =
-        robot_state->setFromIK(joint_model_group, end_effector_pose, 0.1);
+        robot_state->setFromIK(joint_model_group, tip_link_pose, 0.1);
 
     const auto end_time = std::chrono::high_resolution_clock::now();
 
