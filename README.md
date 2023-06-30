@@ -40,23 +40,19 @@ Source the workspace:
 source install/setup.bash
 ```
 
-Launch an example robot arm demo:
-
-```
-ros2 launch iiwa_moveit_config demo.launch.py
-```
-
-Run a performance evaluation node (WIP)
-
-```
-ros2 run ik_benchmarks run_ik_benchmarks
-```
-
-
 ## Running the benchmarks (WIP)
 
-Run the following command to start the benchmarking program
+The benchmarking program is designed to adapt to different robots and their corresponding moveit config packages. The main launch file `start_ik_benchmarks.launch.py` accepts two arguments, `moveit_config_pkg`, and `move_group`. 
+
+The `moveit_config_pkg` argument specifies the name of the robot's moveit_config package. This package contains the necessary configuration files and parameters for the robot's motion planning using MoveIt. By convention, the name of this package is like `<robot_name>_moveit_config`. The `move_group` argument provides the name of the robot's move group to use in the evaluation. The move group represents a subset of the robot's joints that are used for planning robot motion. If these arguments are not provided, the benchmarking program defaults to using the `iiwa` robot.
+
+Run the following command to start the benchmarking program with the `UR5` 6 DOF robot arm:
 ```
-ros2 launch package_name launch_file
+ros2 launch ik_benchmarks start_ik_benchmarks.launch.py moveit_config_pkg:=ur5_moveit_config move_group:=ur5_arm
 ```
 
+To switch to the `iiwa` 7 DOF arm, modify the two arguments accordingly to match the move group and moveit config package of the `iiwa` robot:
+
+```
+ros2 launch ik_benchmarks start_ik_benchmarks.launch.py moveit_config_pkg:=iiwa_moveit_config move_group:=iiwa_arm
+```
