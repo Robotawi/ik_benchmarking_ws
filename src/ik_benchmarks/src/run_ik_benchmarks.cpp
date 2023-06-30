@@ -40,7 +40,8 @@ int main(int argc, char *argv[])
   moveit::core::RobotStatePtr robot_state(new moveit::core::RobotState(robot_model));
   robot_state->setToDefaultValues();
 
-  const moveit::core::JointModelGroup *joint_model_group = robot_model->getJointModelGroup("iiwa_arm");
+  std::string move_group_name = node->get_parameter("move_group").as_string();
+  const moveit::core::JointModelGroup *joint_model_group = robot_model->getJointModelGroup(move_group_name);
 
   // Get joint names and bounds
   const std::vector<std::string> &joint_names = joint_model_group->getVariableNames();
