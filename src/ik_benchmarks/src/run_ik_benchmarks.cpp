@@ -13,7 +13,8 @@
 
 using namespace std::chrono_literals;
 
-struct JointBounds {
+struct JointBounds
+{
   double min_position;
   double max_position;
 
@@ -22,8 +23,8 @@ struct JointBounds {
         max_position(std::numeric_limits<double>::max()) {}
 };
 
-int main(int argc, char *argv[]) {
-
+int main(int argc, char *argv[])
+{
   // Initialize the node
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions node_options;
@@ -34,35 +35,35 @@ int main(int argc, char *argv[]) {
 
   // Load the robot model, kinematic state, and joint model group
   robot_model_loader::RobotModelLoader robot_model_loader(node);
-  const moveit::core::RobotModelPtr &robot_model =
-      robot_model_loader.getModel();
+  const moveit::core::RobotModelPtr &robot_model = robot_model_loader.getModel();
 
-  moveit::core::RobotStatePtr robot_state(
-      new moveit::core::RobotState(robot_model));
+  moveit::core::RobotStatePtr robot_state(new moveit::core::RobotState(robot_model));
   robot_state->setToDefaultValues();
 
-  const moveit::core::JointModelGroup *joint_model_group =
-      robot_model->getJointModelGroup("iiwa_arm");
+  const moveit::core::JointModelGroup *joint_model_group = robot_model->getJointModelGroup("iiwa_arm");
 
   // Get joint names and bounds
-  const std::vector<std::string> &joint_names =
-      joint_model_group->getVariableNames();
+  const std::vector<std::string> &joint_names = joint_model_group->getVariableNames();
 
   std::vector<JointBounds> joint_bounds(joint_model_group->getVariableCount());
 
   // TODO(Mohamed): use only active joints/variables because getVariableCount returns all joint types
-  for (size_t i = 0; i < joint_model_group->getVariableCount(); ++i) {
+  for (size_t i = 0; i < joint_model_group->getVariableCount(); ++i)
+  {
     auto const &name = joint_names.at(i);
     auto const &bounds = robot_model->getVariableBounds(name);
 
     bool bounded = bounds.position_bounded_;
 
-    if (bounded) {
+    if (bounded)
+    {
       fmt::print("Joint {} has bounds of {} and {}\n", i + 1,
                  bounds.min_position_, bounds.max_position_);
       joint_bounds.at(i).min_position = bounds.min_position_;
       joint_bounds.at(i).max_position = bounds.max_position_;
-    } else {
+    }
+    else
+    {
       fmt::print("Joints are unbounded!\n");
       // TODO (Mohamed): Handle this case. Should we assume a range?
       return -1;
@@ -84,22 +85,23 @@ int main(int argc, char *argv[]) {
     rclcpp::shutdown();
   }
 
-  const Eigen::Isometry3d &tip_link_pose =
-      robot_state->getGlobalLinkTransform(tip_link_name);
+  const Eigen::Isometry3d &tip_link_pose = robot_state->getGlobalLinkTransform(tip_link_name);
 
   // Collect IK solving data
   const int sample_size{1000};
   double success_count{0.0};
-  std::vector<int> solve_times; //milliseconds
+  std::vector<int> solve_times; // milliseconds
 
   // Sample random joints
   std::random_device rd;
   std::mt19937 generator(rd());
 
-  for (size_t i = 0; i < sample_size; ++i) {
+  for (size_t i = 0; i < sample_size; ++i)
+  {
     std::vector<double> joint_values;
 
-    for (const auto &bound : joint_bounds) {
+    for (const auto &bound : joint_bounds)
+    {
       std::uniform_real_distribution<> distribution(bound.min_position,
                                                     bound.max_position);
       joint_values.push_back(distribution(generator));
@@ -118,7 +120,8 @@ int main(int argc, char *argv[]) {
 
     const auto end_time = std::chrono::high_resolution_clock::now();
 
-    if (found_ik) {
+    if (found_ik)
+    {
       success_count++;
       const auto solve_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
       solve_times.push_back(solve_time.count());
@@ -126,9 +129,9 @@ int main(int argc, char *argv[]) {
   }
 
   // Average IK solving time
-  double average_solve_time = std::accumulate(solve_times.begin(), solve_times.end(), 0.0)/solve_times.size();
+  double average_solve_time = std::accumulate(solve_times.begin(), solve_times.end(), 0.0) / solve_times.size();
 
-  fmt::print("Success rate = {} and average IK solving time is {} ms\n", success_count/sample_size, average_solve_time);
+  fmt::print("Success rate = {} and average IK solving time is {} ms\n", success_count / sample_size, average_solve_time);
 
   rclcpp::shutdown();
   return 0;
