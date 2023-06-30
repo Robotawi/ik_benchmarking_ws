@@ -37,9 +37,9 @@ int main(int argc, char *argv[]) {
   const moveit::core::RobotModelPtr &robot_model =
       robot_model_loader.getModel();
 
-  moveit::core::RobotStatePtr kinematic_state(
+  moveit::core::RobotStatePtr robot_state(
       new moveit::core::RobotState(robot_model));
-  kinematic_state->setToDefaultValues();
+  robot_state->setToDefaultValues();
 
   const moveit::core::JointModelGroup *joint_model_group =
       robot_model->getJointModelGroup("iiwa_arm");
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
       joint_bounds.at(i).max_position = bounds.max_position_;
     } else {
       fmt::print("Joints are unbounded!\n");
-      // TODO: Handle this case. Should we assume a range? 
+      // TODO: Handle this case. Should we assume a range?
       return -1;
     }
   }
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
   const int sample_size{1000};
   double success_count{0.0};
   std::vector<int> solve_times; //milliseconds
-  
+
   // Sample random joints
   std::random_device rd;
   std::mt19937 generator(rd());
@@ -88,29 +88,29 @@ int main(int argc, char *argv[]) {
     fmt::print("Random joint values are:\n{}\n", joint_values);
 
     // Solve Forward Kinematics
-    kinematic_state->setJointGroupPositions(joint_model_group, joint_values);
-    kinematic_state->updateLinkTransforms();
+    robot_state->setJointGroupPositions(joint_model_group, joint_values);
+    robot_state->updateLinkTransforms();
 
     // TODO: Use the loaded tip here
     const Eigen::Isometry3d &end_effector_pose =
-        kinematic_state->getGlobalLinkTransform("tool0");
+        robot_state->getGlobalLinkTransform("tool0");
 
     // Solve Inverse kinematics
     const auto start_time = std::chrono::high_resolution_clock::now();
 
     bool found_ik =
-        kinematic_state->setFromIK(joint_model_group, end_effector_pose, 0.1);
+        robot_state->setFromIK(joint_model_group, end_effector_pose, 0.1);
 
-    const auto end_time = std::chrono::high_resolution_clock::now(); 
+    const auto end_time = std::chrono::high_resolution_clock::now();
 
     if (found_ik) {
       success_count++;
       const auto solve_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-      solve_times.push_back(solve_time.count());      
+      solve_times.push_back(solve_time.count());
     }
   }
 
-  // Average IK solving time 
+  // Average IK solving time
   double average_solve_time = std::accumulate(solve_times.begin(), solve_times.end(), 0.0)/solve_times.size();
 
   fmt::print("Success rate = {} and average IK solving time is {} ms\n", success_count/sample_size, average_solve_time);
