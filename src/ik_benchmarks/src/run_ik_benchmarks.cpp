@@ -10,6 +10,7 @@
 #include <random>
 #include <chrono>
 #include <numeric>
+#include <fstream>
 
 using namespace std::chrono_literals;
 
@@ -56,7 +57,9 @@ private:
 
   unsigned int sample_size_;
   double success_count_;
-  std::vector<int> solve_times_; // milliseconds
+  std::vector<int> solve_times_; // microseconds
+
+  std::ofstream data_file_;
 
   void initialize();
   void gather_date();
@@ -65,7 +68,11 @@ private:
 void IKBenchmarking::initialize()
 {
   generator_ = std::mt19937(rd_());
+
   robot_state_->setToDefaultValues();
+
+  data_file_.open("ik_benchmarking_data.csv", std::ios::app);
+  data_file_ << "trial,found_ik,solve_time\n";
 
   move_group_name_ = node_->get_parameter("move_group").as_string();
   joint_model_group_ = robot_model_->getJointModelGroup(move_group_name_);
@@ -125,7 +132,7 @@ void IKBenchmarking::gather_date()
                                                     bound.max_position);
       joint_values.push_back(distribution(generator_));
     }
-    fmt::print("Random joint values are:\n{}\n", joint_values);
+    // fmt::print("Random joint values are:\n{}\n", joint_values);
 
     // Solve Forward Kinematics
     robot_state_->setJointGroupPositions(joint_model_group_, joint_values);
@@ -142,8 +149,14 @@ void IKBenchmarking::gather_date()
     if (found_ik)
     {
       success_count_++;
-      const auto solve_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+      const auto solve_time = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
       solve_times_.push_back(solve_time.count());
+
+      data_file_ << i + 1 << ",yes," << solve_time.count() << "\n";
+    }
+    else
+    {
+      data_file_ << i + 1 << ",no,not_available" << "\n";
     }
   }
 
@@ -157,6 +170,8 @@ void IKBenchmarking::run()
 {
   this->initialize();
   this->gather_date();
+  
+  this->data_file_.close();
 }
 
 int main(int argc, char *argv[])
