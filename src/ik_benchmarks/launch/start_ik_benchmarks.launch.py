@@ -23,8 +23,13 @@ def generate_launch_description():
         "kinematics_file", default_value="kinematics.yaml", description="Provides information about the inverse kinematics (IK) solver to use"
     )
 
+    sample_size_arg = DeclareLaunchArgument(
+        "sample_size", default_value="10000", description="Sets how many times the IK solution process is repeated for evaluation"
+    )
+
     # Get parameters from launch arguments
     move_group = LaunchConfiguration("move_group")
+    sample_size = LaunchConfiguration("sample_size")
 
     # Extract the robot name if the moveit_config_pkg arg is provided
     # It is usually in the form of <robot_name>_moveit_config
@@ -61,8 +66,8 @@ def generate_launch_description():
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,
             moveit_config.robot_description_kinematics,
-            {"move_group": move_group},
+            {"move_group": move_group, "sample_size":sample_size},
         ],
     )
 
-    return LaunchDescription([move_group_arg, moveit_config_pkg_arg, kinematics_file_arg, benchmarks_node])
+    return LaunchDescription([move_group_arg, moveit_config_pkg_arg, kinematics_file_arg, sample_size_arg, benchmarks_node])

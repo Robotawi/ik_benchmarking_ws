@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
   const Eigen::Isometry3d &tip_link_pose = robot_state->getGlobalLinkTransform(tip_link_name);
 
   // Collect IK solving data
-  const int sample_size{10000};
+  const unsigned int sample_size = node->get_parameter("sample_size").as_int();
   double success_count{0.0};
   std::vector<int> solve_times; // milliseconds
 
