@@ -1,9 +1,11 @@
+import os
+import sys
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from moveit_configs_utils import MoveItConfigsBuilder
-import sys
+from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
@@ -17,19 +19,38 @@ def generate_launch_description():
         'moveit_config_pkg', default_value="iiwa_moveit_config", description="Moveit config package to load robot description"
     )
 
+    kinematics_file_arg = DeclareLaunchArgument(
+        "kinematics_file", default_value="kinematics.yaml", description="Provides information about the inverse kinematics (IK) solver to use"
+    )
+
     # Get parameters from launch arguments
     move_group = LaunchConfiguration("move_group")
 
     # Extract the robot name if the moveit_config_pkg arg is provided
     # It is usually in the form of <robot_name>_moveit_config
-    robot_name = "iiwa" #default
+    # Default values are as follows
+    robot_name = "iiwa"
+    moveit_config_pkg_name = "iiwa_moveit_config"
+    kinematics_file_name = "kinematics.yaml"
+
     for arg in sys.argv:
         if arg.startswith("moveit_config_pkg:="):
-            arg_value = arg.split(":=")[1]
-            robot_name = arg_value.split("_")[0]
+            moveit_config_pkg_name = arg.split(":=")[1]
+            robot_name = moveit_config_pkg_name.split("_")[0]
+        elif arg.startswith("kinematics_file:="):
+            kinematics_file_name = arg.split(":=")[1]
 
-    # Build moveit_config using the robot name
-    moveit_config = MoveItConfigsBuilder(robot_name).to_moveit_configs()
+    # Build moveit_config using the robot name and kinematic file
+    moveit_config = (MoveItConfigsBuilder(robot_name)
+                     .robot_description_kinematics(
+                        file_path=os.path.join(
+                            get_package_share_directory(moveit_config_pkg_name),
+                            "config",
+                            kinematics_file_name,
+                        )
+                    )
+                    .to_moveit_configs()
+                )
 
     # Start benchmarking node with required robot description and move_group parameters
     benchmarks_node = Node(
@@ -44,4 +65,4 @@ def generate_launch_description():
         ],
     )
 
-    return LaunchDescription([move_group_arg, moveit_config_pkg_arg, benchmarks_node])
+    return LaunchDescription([move_group_arg, moveit_config_pkg_arg, kinematics_file_arg, benchmarks_node])
